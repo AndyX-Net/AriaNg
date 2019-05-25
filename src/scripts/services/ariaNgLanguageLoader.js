@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    angular.module('ariaNg').factory('ariaNgLanguageLoader', ['$http', '$q', 'localStorageService', 'ariaNgConstants', 'ariaNgLanguages', function ($http, $q, localStorageService, ariaNgConstants, ariaNgLanguages) {
+    angular.module('ariaNg').factory('ariaNgLanguageLoader', ['$http', '$q', 'ariaNgConstants', 'ariaNgLanguages', 'ariaNgAssetsCacheService', 'ariaNgNotificationService', 'ariaNgLogService', 'ariaNgStorageService', function ($http, $q, ariaNgConstants, ariaNgLanguages, ariaNgAssetsCacheService, ariaNgNotificationService, ariaNgLogService, ariaNgStorageService) {
         var getKeyValuePair = function (line) {
             for (var i = 0; i < line.length; i++) {
                 if (i > 0 && line.charAt(i - 1) !== '\\' && line.charAt(i) === '=') {
@@ -28,7 +28,7 @@
                 category = category.substring(1, category.length - 1);
             }
 
-            if (category === 'default') {
+            if (category === 'global') {
                 return currentCategory;
             }
 
@@ -90,10 +90,18 @@
             }
 
             var languageKey = ariaNgConstants.languageStorageKeyPrefix + '.' + options.key;
-            var languageResource = localStorageService.get(languageKey);
+            var languageResource = ariaNgStorageService.get(languageKey);
 
             if (languageResource) {
                 deferred.resolve(languageResource);
+            }
+
+            if (ariaNgAssetsCacheService.getLanguageAsset(options.key)) {
+                var languageObject = getLanguageObject(ariaNgAssetsCacheService.getLanguageAsset(options.key));
+                ariaNgStorageService.set(languageKey, languageObject);
+                deferred.resolve(languageObject);
+                
+                return deferred.promise;
             }
 
             var languagePath = ariaNgConstants.languagePath + '/' + options.key + ariaNgConstants.languageFileExtension;
@@ -103,9 +111,14 @@
                 method: 'GET'
             }).then(function onSuccess(response) {
                 var languageObject = getLanguageObject(response.data);
-                localStorageService.set(languageKey, languageObject);
+                ariaNgStorageService.set(languageKey, languageObject);
                 return deferred.resolve(languageObject);
             }).catch(function onError(response) {
+                ariaNgLogService.warn('[ariaNgLanguageLoader] cannot get language resource');
+                ariaNgNotificationService.notifyInPage('', 'AriaNg cannot get language resources, and will display in default language.', {
+                    type: 'error',
+                    delay: false
+                });
                 return deferred.reject(options.key);
             });
 

@@ -21,6 +21,12 @@
         <div class="tab-content no-padding">
             <div class="tab-pane" ng-class="{'active': isCurrentGlobalTab()}">
                 <div class="settings-table striped hoverable">
+                    <div class="row" ng-if="context.ariaNgVersion">
+                        <div class="setting-key col-sm-4">
+                            <span translate>AriaNg Version</span>
+                        </div>
+                        <div class="setting-value col-sm-8" ng-bind="context.ariaNgVersion + (context.buildCommit ? ' (' + context.buildCommit + ')' : '')"></div>
+                    </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
                             <span translate>Language</span>
@@ -50,6 +56,7 @@
                                data-trigger="hover" data-placement="auto right" data-container="body" data-html="true"
                                data-content="{{('Supported Placeholder' | translate) + ':<br/>' +
                                ('AriaNg Title' | translate) + ': ${title}<br/>' +
+                               ('Current RPC Alias' | translate) + ': ${rpcprofile}<br/>' +
                                ('Downloading Count' | translate) + ': ${downloading}<br/>' +
                                 ('Waiting Count' | translate) + ': ${waiting}<br/>' +
                                 ('Stopped Count' | translate) + ': ${stopped}<br/>' +
@@ -64,6 +71,18 @@
                             <em>[<span translate>Preview</span>] <span ng-bind="context.titlePreview"></span></em>
                         </div>
                     </div>
+                    <div class="row" ng-if="isSupportNotification()">
+                        <div class="setting-key setting-key-without-desc col-sm-4">
+                            <span translate>Enable Browser Notification</span>
+                        </div>
+                        <div class="setting-value col-sm-8">
+                            <select class="form-control" style="width: 100%;"
+                                    ng-model="context.settings.browserNotification"
+                                    ng-change="setEnableBrowserNotification(context.settings.browserNotification)"
+                                    ng-options="option.value as (option.name | translate) for option in context.trueFalseOptions">
+                            </select>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
                             <span translate>Page Title Refresh Interval</span>
@@ -74,18 +93,6 @@
                                     ng-model="context.settings.titleRefreshInterval"
                                     ng-change="setTitleRefreshInterval(context.settings.titleRefreshInterval)"
                                     ng-options="time.optionValue as (time.name | translate: {value: time.value}) for time in context.availableTime">
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row" ng-if="isSupportNotification()">
-                        <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Enable Browser Notification</span>
-                        </div>
-                        <div class="setting-value col-sm-8">
-                            <select class="form-control" style="width: 100%;"
-                                    ng-model="context.settings.browserNotification"
-                                    ng-change="setEnableBrowserNotification(context.settings.browserNotification)"
-                                    ng-options="option.value as (option.name | translate) for option in context.trueFalseOptions">
                             </select>
                         </div>
                     </div>
@@ -117,6 +124,19 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
+                            <span translate>RPC List Display Order</span>
+                            <span class="asterisk">*</span>
+                        </div>
+                        <div class="setting-value col-sm-8">
+                            <select class="form-control" style="width: 100%;" ng-model="context.settings.rpcListDisplayOrder"
+                                    ng-change="setRPCListDisplayOrder(context.settings.rpcListDisplayOrder)">
+                                <option value="recentlyUsed" translate>Recently Used</option>
+                                <option value="rpcAlias" translate>RPC Alias</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="setting-key setting-key-without-desc col-sm-4">
                             <span translate>Action After Creating New Tasks</span>
                         </div>
                         <div class="setting-value col-sm-8">
@@ -129,13 +149,39 @@
                     </div>
                     <div class="row">
                         <div class="setting-key setting-key-without-desc col-sm-4">
-                            <span translate>Removing Old Task After Restarting</span>
+                            <span translate>Removing Old Task After Retrying</span>
                         </div>
                         <div class="setting-value col-sm-8">
-                            <select class="form-control" style="width: 100%;" ng-model="context.settings.removeOldTaskAfterRestarting"
-                                    ng-change="setRemoveOldTaskAfterRestarting(context.settings.removeOldTaskAfterRestarting)"
+                            <select class="form-control" style="width: 100%;" ng-model="context.settings.removeOldTaskAfterRetrying"
+                                    ng-change="setRemoveOldTaskAfterRetrying(context.settings.removeOldTaskAfterRetrying)"
                                     ng-options="option.value as (option.name | translate) for option in context.trueFalseOptions">
                             </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="setting-key setting-key-without-desc col-sm-4">
+                            <span translate>Action After Retrying Task</span>
+                        </div>
+                        <div class="setting-value col-sm-8">
+                            <select class="form-control" style="width: 100%;" ng-model="context.settings.afterRetryingTask"
+                                    ng-change="setAfterRetryingTask(context.settings.afterRetryingTask)">
+                                <option value="task-list-downloading" translate>Navigate to Downloading Task List Page</option>
+                                <option value="task-detail" translate>Navigate to Task Detail Page</option>
+                                <option value="stay-on-current" translate>Stay on Current Page</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="setting-key setting-key-without-desc col-sm-4">
+                            <span translate>Import / Export AriaNg Settings</span>
+                        </div>
+                        <div class="setting-value col-sm-8">
+                            <button class="btn btn-sm btn-default" ng-click="showImportSettingsModal()">
+                                <span translate>Import Settings</span>
+                            </button>
+                            <button class="btn btn-sm btn-default" ng-click="showExportSettingsModal()">
+                                <span translate>Export Settings</span>
+                            </button>
                         </div>
                     </div>
                     <div class="row tip no-background no-hover">
@@ -143,6 +189,9 @@
                         <span translate>Changes to the settings take effect after refreshing page.</span>
                         <button class="btn btn-xs btn-default" ng-click="resetSettings()">
                             <span translate>Reset Settings</span>
+                        </button>
+                        <button class="btn btn-xs btn-default" ng-click="clearHistory()">
+                            <span translate>Clear Settings History</span>
                         </button>
                     </div>
                 </div>
@@ -232,6 +281,66 @@
                             <span translate>Activate</span>
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="import-settings-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <span translate>Import Settings</span>
+                        <small>
+                            <a class="pointer-cursor" title="{{'Open' | translate}}" ng-click="openAriaNgConfigFile()">
+                                <i class="icon-primary fa fa-folder-open-o"></i>
+                            </a>
+                        </small>
+                    </h4>
+                </div>
+                <div class="modal-body no-padding">
+                    <div class="settings-table striped">
+                        <input id="import-file-holder" type="file" style="display: none"/>
+                        <textarea class="form-control" ng-model="context.importSettings" rows="20"
+                                  ng-placeholder="'AriaNg settings data' | translate"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" ng-disabled="!context.importSettings || !context.importSettings.length"
+                            ng-click="importSettings(context.importSettings)" translate>Import</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal" translate>Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="export-settings-modal" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">
+                        <span translate>Export Settings</span>
+                        <small>
+                            <a class="pointer-cursor" title="{{'Save' | translate}}" ng-if="context.isSupportBlob"
+                               ng-blob-download="context.exportSettings" ng-file-name="AriaNgConfig.json" ng-content-type="application/json">
+                                <i class="icon-primary fa fa-save"></i>
+                            </a>
+                            <a class="pointer-cursor" title="{{'Copy' | translate}}" ng-click="copyExportSettings()">
+                                <i class="icon-primary fa fa-copy"></i>
+                            </a>
+                            <span class="label label-default fade-in" ng-if="context.exportSettingsCopied" translate>Data has been copied to clipboard.</span>
+                        </small>
+                    </h4>
+                </div>
+                <div class="modal-body no-padding">
+                    <div class="settings-table striped">
+                        <textarea class="form-control" ng-model="context.exportSettings" rows="20" readonly="readonly"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" translate>Cancel</button>
                 </div>
             </div>
         </div>

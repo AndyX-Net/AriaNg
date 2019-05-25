@@ -10,6 +10,7 @@
         //     [defaultValue: '',]
         //     [required: true|false,] //default: false
         //     [split: '',] //SUPPORT 'text' type
+        //     [submitFormat: 'string|array'] //default: string, parameter 'split' is required
         //     [showCount: true|false,] //SUPPORT 'text' type, parameter 'split' is required, default: false
         //     [options: [],] //SUPPORT 'option' type
         //     [min: 0,] //SUPPORT 'integer', 'float'
@@ -66,7 +67,7 @@
             suffix: 'Bytes',
             defaultValue: '0',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'max-connection-per-server': {
             type: 'integer',
@@ -92,7 +93,7 @@
             suffix: 'Bytes',
             defaultValue: '20M',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'netrc-path': {
             type: 'string',
@@ -228,7 +229,10 @@
             required: true
         },
         'header': {
-            type: 'string'
+            type: 'text',
+            split: '\n',
+            submitFormat: 'array',
+            showCount: true
         },
         'save-cookies': {
             type: 'string'
@@ -363,7 +367,7 @@
             suffix: 'Bytes',
             defaultValue: '50K',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'bt-save-metadata': {
             type: 'boolean',
@@ -461,14 +465,14 @@
             suffix: 'Bytes',
             defaultValue: '0',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'max-upload-limit': {
             type: 'string',
             suffix: 'Bytes',
             defaultValue: '0',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'peer-id-prefix': {
             type: 'string',
@@ -711,7 +715,7 @@
             suffix: 'Bytes',
             defaultValue: '9223372036854775807',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'max-resume-failure-tries': {
             type: 'integer',
@@ -741,7 +745,7 @@
             suffix: 'Bytes',
             defaultValue: '1M',
             required: true,
-            pattern: '^(0|[1-9]\\d*M?)$'
+            pattern: '^(0|[1-9]\\d*(M|m)?)$'
         },
         'show-console-readout': {
             type: 'boolean',
@@ -759,14 +763,14 @@
             suffix: 'Bytes',
             defaultValue: '0',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'max-download-limit': {
             type: 'string',
             suffix: 'Bytes',
             defaultValue: '0',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'no-conf': {
             type: 'boolean',
@@ -777,7 +781,7 @@
             suffix: 'Bytes',
             defaultValue: '5M',
             required: true,
-            pattern: '^(0|[1-9]\\d*(K|M)?)$'
+            pattern: '^(0|[1-9]\\d*(K|k|M|m)?)$'
         },
         'parameterized-uri': {
             type: 'boolean',
@@ -889,12 +893,14 @@
         //     category: 'global|http|bittorrent',
         //     [canShow: 'new|active|waiting|paused',] // possible to show in specific status, supporting multiple choice. if not set, always show
         //     [canUpdate: 'new|active|waiting|paused',] // possible to write in specific status, supporting multiple choice. if not set, always writable
+        //     [showHistory: true|false,] // show history under the input box, only supporting "string" type. if not set, this is set to false
         // }
         taskOptions: [
             {
                 key: 'dir',
                 category: 'global',
-                canUpdate: 'new'
+                canUpdate: 'new',
+                showHistory: true
             },
             {
                 key: 'out',
@@ -963,6 +969,11 @@
                 key: 'all-proxy-passwd',
                 category: 'http',
                 canUpdate: 'new|waiting|paused'
+            },
+            {
+                key: 'referer',
+                category: 'http',
+                canUpdate: 'new'
             },
             {
                 key: 'header',

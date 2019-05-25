@@ -1,9 +1,17 @@
 (function () {
     'use strict';
 
-    angular.module('ariaNg').controller('NewTaskController', ['$rootScope', '$scope', '$location', '$timeout', 'base64', 'ariaNgCommonService', 'ariaNgLogService', 'ariaNgSettingService', 'ariaNgFileService', 'aria2SettingService', 'aria2TaskService', function ($rootScope, $scope, $location, $timeout, base64, ariaNgCommonService, ariaNgLogService, ariaNgSettingService, ariaNgFileService, aria2SettingService, aria2TaskService) {
+    angular.module('ariaNg').controller('NewTaskController', ['$rootScope', '$scope', '$location', '$timeout', 'ariaNgCommonService', 'ariaNgLocalizationService', 'ariaNgLogService', 'ariaNgFileService', 'ariaNgSettingService', 'aria2TaskService', 'aria2SettingService', function ($rootScope, $scope, $location, $timeout, ariaNgCommonService, ariaNgLocalizationService, ariaNgLogService, ariaNgFileService, ariaNgSettingService, aria2TaskService, aria2SettingService) {
         var tabOrders = ['links', 'options'];
         var parameters = $location.search();
+
+        var saveDownloadPath = function (options) {
+            if (!options || !options.dir) {
+                return;
+            }
+
+            aria2SettingService.addSettingHistory('dir', options.dir);
+        };
 
         var downloadByLinks = function (pauseOnAdded, responseCallback) {
             var urls = ariaNgCommonService.parseUrlsFromOriginInput($scope.context.urls);
@@ -21,6 +29,8 @@
                 });
             }
 
+            saveDownloadPath(options);
+
             return aria2TaskService.newUriTasks(tasks, pauseOnAdded, responseCallback);
         };
 
@@ -30,6 +40,8 @@
                 options: angular.copy($scope.context.options)
             };
 
+            saveDownloadPath(task.options);
+
             return aria2TaskService.newTorrentTask(task, pauseOnAdded, responseCallback);
         };
 
@@ -38,6 +50,8 @@
                 content: $scope.context.uploadFile.base64Content,
                 options: angular.copy($scope.context.options)
             };
+
+            saveDownloadPath(task.options);
 
             return aria2TaskService.newMetalinkTask(task, pauseOnAdded, responseCallback);
         };
@@ -65,7 +79,7 @@
 
         if (parameters.url) {
             try {
-                $scope.context.urls = base64.urldecode(parameters.url);
+                $scope.context.urls = ariaNgCommonService.base64UrlDecode(parameters.url);
             } catch (ex) {
                 ariaNgLogService.error('[NewTaskController] base64 decode error, url=' + parameters.url, ex);
             }
@@ -114,23 +128,31 @@
         };
 
         $scope.openTorrent = function () {
-            ariaNgFileService.openFileContent('.torrent', function (result) {
+            ariaNgFileService.openFileContent({
+                scope: $scope,
+                fileFilter: '.torrent',
+                fileType: 'binary'
+            }, function (result) {
                 $scope.context.uploadFile = result;
                 $scope.context.taskType = 'torrent';
                 $scope.changeTab('options');
             }, function (error) {
-                ariaNgCommonService.showError(error);
-            });
+                ariaNgLocalizationService.showError(error);
+            }, angular.element('#file-holder'));
         };
 
         $scope.openMetalink = function () {
-            ariaNgFileService.openFileContent('.meta4,.metalink', function (result) {
+            ariaNgFileService.openFileContent({
+                scope: $scope,
+                fileFilter: '.meta4,.metalink',
+                fileType: 'binary'
+            }, function (result) {
                 $scope.context.uploadFile = result;
                 $scope.context.taskType = 'metalink';
                 $scope.changeTab('options');
             }, function (error) {
-                ariaNgCommonService.showError(error);
-            });
+                ariaNgLocalizationService.showError(error);
+            }, angular.element('#file-holder'));
         };
 
         $scope.startDownload = function (pauseOnAdded) {
